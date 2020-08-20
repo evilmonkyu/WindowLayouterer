@@ -9,11 +9,12 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using WindowLayouterer.Platform;
 
-namespace WindowLayouterer.Tests
+namespace WindowLayouterer.Tests.Platform
 {
     [TestClass]
-    public class PlatformInterfaceTests
+    public class PlatformInterfaceImportsTests
     {
         private static Process TestAppProcess;
         private static IntPtr TestAppWindowHandle;
@@ -42,13 +43,13 @@ namespace WindowLayouterer.Tests
         public void Does_EnumDesktopWindows()
         {
             var windows = new List<int>();
-            EnumDesktopWindowsDelegate callback = (IntPtr hWnd, int lParam) =>
+            EnumDesktopWindowsDelegate callback = (hWnd, lParam) =>
             {
                 windows.Add(hWnd.ToInt32());
                 return true;
             };
 
-            var result = PlatformInterface.EnumDesktopWindows(IntPtr.Zero, callback, IntPtr.Zero);
+            var result = PlatformInterfaceImports.EnumDesktopWindows(IntPtr.Zero, callback, IntPtr.Zero);
 
             Assert.IsTrue(result);
             Assert.IsTrue(windows.Count > 0);
@@ -57,14 +58,14 @@ namespace WindowLayouterer.Tests
         [TestMethod]
         public void Does_GetLastError()
         {
-            PlatformInterface.GetLastError();
+            PlatformInterfaceImports.GetLastError();
         }
 
         [TestMethod]
         public void Does_GetWindowThreadProcessId()
         {
             uint processId;
-            PlatformInterface.GetWindowThreadProcessId(TestAppWindowHandle, out processId);
+            PlatformInterfaceImports.GetWindowThreadProcessId(TestAppWindowHandle, out processId);
             Assert.AreEqual(TestAppProcess.Id, (int)processId);
         }
 
@@ -72,7 +73,7 @@ namespace WindowLayouterer.Tests
         public void Does_GetWindowText()
         {
             var sb = new StringBuilder();
-            PlatformInterface.GetWindowText(TestAppWindowHandle, sb, 2000);
+            PlatformInterfaceImports.GetWindowText(TestAppWindowHandle, sb, 2000);
             Assert.AreEqual("Test App", sb.ToString());
         }
 
@@ -80,7 +81,7 @@ namespace WindowLayouterer.Tests
         public void Does_GetWindowPlacement()
         {
             var windowPlacement = new WINDOWPLACEMENT();
-            PlatformInterface.GetWindowPlacement(TestAppWindowHandle, ref windowPlacement);
+            PlatformInterfaceImports.GetWindowPlacement(TestAppWindowHandle, ref windowPlacement);
             Assert.AreNotEqual(0, windowPlacement.NormalPosition.Right);
         }
 
@@ -88,56 +89,58 @@ namespace WindowLayouterer.Tests
         public void Does_GetWindowInfo()
         {
             var windowInfo = new WINDOWINFO();
-            PlatformInterface.GetWindowInfo(TestAppWindowHandle, ref windowInfo);
+            PlatformInterfaceImports.GetWindowInfo(TestAppWindowHandle, ref windowInfo);
             Assert.AreNotEqual(0u, windowInfo.dwStyle);
         }
 
         [TestMethod]
         public void Can_ResizeWindow()
         {
-            var posInfo = PlatformInterface.BeginDeferWindowPos(1);
-            PlatformInterface.DeferWindowPos(posInfo, TestAppWindowHandle, IntPtr.Zero, 100, 100, 1000, 1000, (uint)(DeferWindowPosCommands.SWP_NOZORDER & DeferWindowPosCommands.SWP_NOACTIVATE));
-            PlatformInterface.EndDeferWindowPos(posInfo);
+            var posInfo = PlatformInterfaceImports.BeginDeferWindowPos(1);
+            PlatformInterfaceImports.DeferWindowPos(posInfo, TestAppWindowHandle, IntPtr.Zero, 100, 100, 1000, 1000, (uint)(DeferWindowPosCommands.SWP_NOZORDER & DeferWindowPosCommands.SWP_NOACTIVATE));
+            PlatformInterfaceImports.EndDeferWindowPos(posInfo);
         }
 
-        //[TestMethod]
-        //public void CanEnumerateWindowProcesses()
-        //{
-        //    var windows = new List<IntPtr>();
-        //    EnumDesktopWindowsDelegate callback = (IntPtr hWnd, int lParam) =>
-        //    {
-        //        windows.Add(hWnd);
-        //        return true;
-        //    };
+        [TestMethod]
+        public void CanEnumerateWindowProcesses()
+        {
+            var windows = new List<IntPtr>();
+            EnumDesktopWindowsDelegate callback = (IntPtr hWnd, int lParam) =>
+            {
+                windows.Add(hWnd);
+                return true;
+            };
 
-        //    PlatformInterface.EnumDesktopWindows(IntPtr.Zero, callback, IntPtr.Zero);
+            PlatformInterfaceImports.EnumDesktopWindows(IntPtr.Zero, callback, IntPtr.Zero);
 
-        //    IEnumerable<string> strs = null;
-        //    try
-        //    {
-        //        var winfo = new WINDOWINFO();
-        //        var stringBuilder = new StringBuilder();
-        //        strs = windows.Select(w =>
-        //        {
-        //            uint processId;
-        //            PlatformInterface.GetWindowThreadProcessId(w, out processId);
-        //            stringBuilder.Clear();
-        //            //PlatformInterface.GetWindowText(w, stringBuilder, 2048);
-        //            winfo.cbSize = Convert.ToUInt32(Marshal.SizeOf(winfo));
-        //            if (!PlatformInterface.GetWindowInfo(w, ref winfo)) return "";
-        //            return processId + " " + stringBuilder.ToString() + " = " + (winfo.dwStyle & 0x10000000u);
-        //        }).ToList();
-        //    }
-        //    catch (Exception e)
-        //    { 
-        //    }
+            IEnumerable<string> strs = null;
+            try
+            {
+                strs = windows.Select(w =>
+                {
+                    var winfo = new WINDOWINFO();
+                    uint processId;
+                    PlatformInterfaceImports.GetWindowThreadProcessId(w, out processId);
+                    StringBuilder stringBuilder = new StringBuilder(1024);
+                    //if ((winfo.dwStyle & 0x10000000u) > 0)
+                    //{
+                        PlatformInterfaceImports.GetWindowText(w, stringBuilder, 1024);
+                    //}
+                    winfo.cbSize = Convert.ToUInt32(Marshal.SizeOf(winfo));
+                    PlatformInterfaceImports.GetWindowInfo(w, ref winfo);
+                    return Process.GetProcessById((int)processId).ProcessName + " " + stringBuilder.ToString() + " = " + (winfo.dwStyle & 0x10000000u);
+                }).ToList();
+            }
+            catch (Exception e)
+            {
+            }
 
-        //    foreach (var s in strs.Where(x => !x.EndsWith("= 0")))
-        //    {
-        //        Console.WriteLine(s);
-        //    }
-        //    Assert.IsTrue(windows.Count > 0);
-        //}
+            foreach (var s in strs.Where(x => !x.EndsWith("= 0")))
+            {
+                Console.WriteLine(s);
+            }
+            Assert.IsTrue(windows.Count > 0);
+        }
 
         private static void StartTestApp()
         {
@@ -148,7 +151,7 @@ namespace WindowLayouterer.Tests
             var info = new ProcessStartInfo
             {
                 FileName = @"..\..\..\..\WindowLayouterer.TestApp\bin\Debug\netcoreapp3.1\WindowLayouterer.TestApp.exe",
-                UseShellExecute = true               
+                UseShellExecute = true
             };
             TestAppProcess = Process.Start(info);
             Thread.Sleep(500);

@@ -6,8 +6,11 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WindowLayouterer", "WindowLayouterer\WindowLayouterer.csproj", "{236923A7-FEE1-4904-940A-662F4A091158}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WindowLayouterer.Tests", "WindowLayouterer.Tests\WindowLayouterer.Tests.csproj", "{DD1A3C8A-54C7-4BD9-B269-AD08C1F064AF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0E6AF371-44C4-45B4-999E-4AB1CE6442B7} = {0E6AF371-44C4-45B4-999E-4AB1CE6442B7}
+	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowLayouterer.TestApp", "WindowLayouterer.TestApp\WindowLayouterer.TestApp.csproj", "{0E6AF371-44C4-45B4-999E-4AB1CE6442B7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WindowLayouterer.TestApp", "WindowLayouterer.TestApp\WindowLayouterer.TestApp.csproj", "{0E6AF371-44C4-45B4-999E-4AB1CE6442B7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

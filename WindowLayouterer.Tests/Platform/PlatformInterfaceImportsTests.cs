@@ -31,14 +31,6 @@ namespace WindowLayouterer.Tests.Platform
             StopTestApp();
         }
 
-        //[TestMethod]
-        //public void Can_GetWorkStation()
-        //{
-        //    var handle = PlatformInterface.GetDesktopWindow();
-
-        //    Assert.IsTrue(handle.ToInt64() > 0);
-        //}
-
         [TestMethod]
         public void Does_EnumDesktopWindows()
         {
@@ -94,6 +86,20 @@ namespace WindowLayouterer.Tests.Platform
         }
 
         [TestMethod]
+        public void Does_IsWindowVisible()
+        {
+            var result = PlatformInterfaceImports.IsWindowVisible(TestAppWindowHandle);
+            Assert.IsTrue(result);
+        }
+
+        [TestMethod]
+        public void Does_GetForegroundWindow()
+        {
+            var result = PlatformInterfaceImports.GetForegroundWindow();
+            Assert.AreNotEqual(0, result.ToInt64());
+        }
+
+        [TestMethod]
         public void Can_ResizeWindow()
         {
             var posInfo = PlatformInterfaceImports.BeginDeferWindowPos(1);
@@ -101,46 +107,44 @@ namespace WindowLayouterer.Tests.Platform
             PlatformInterfaceImports.EndDeferWindowPos(posInfo);
         }
 
-        [TestMethod]
-        public void CanEnumerateWindowProcesses()
-        {
-            var windows = new List<IntPtr>();
-            EnumDesktopWindowsDelegate callback = (IntPtr hWnd, int lParam) =>
-            {
-                windows.Add(hWnd);
-                return true;
-            };
+        //[TestMethod]
+        //public void CanEnumerateWindowProcesses()
+        //{
+        //    var windows = new List<IntPtr>();
+        //    EnumDesktopWindowsDelegate callback = (IntPtr hWnd, int lParam) =>
+        //    {
+        //        windows.Add(hWnd);
+        //        return true;
+        //    };
 
-            PlatformInterfaceImports.EnumDesktopWindows(IntPtr.Zero, callback, IntPtr.Zero);
+        //    PlatformInterfaceImports.EnumDesktopWindows(IntPtr.Zero, callback, IntPtr.Zero);
 
-            IEnumerable<string> strs = null;
-            try
-            {
-                strs = windows.Select(w =>
-                {
-                    var winfo = new WINDOWINFO();
-                    uint processId;
-                    PlatformInterfaceImports.GetWindowThreadProcessId(w, out processId);
-                    StringBuilder stringBuilder = new StringBuilder(1024);
-                    //if ((winfo.dwStyle & 0x10000000u) > 0)
-                    //{
-                        PlatformInterfaceImports.GetWindowText(w, stringBuilder, 1024);
-                    //}
-                    winfo.cbSize = Convert.ToUInt32(Marshal.SizeOf(winfo));
-                    PlatformInterfaceImports.GetWindowInfo(w, ref winfo);
-                    return Process.GetProcessById((int)processId).ProcessName + " " + stringBuilder.ToString() + " = " + (winfo.dwStyle & 0x10000000u);
-                }).ToList();
-            }
-            catch (Exception e)
-            {
-            }
+        //    IEnumerable<string> strs = null;
+        //    try
+        //    {
+        //        strs = windows.Select(w =>
+        //        {
+        //            var winfo = new WINDOWINFO();
+        //            uint processId;
+        //            PlatformInterfaceImports.GetWindowThreadProcessId(w, out processId);
+        //            StringBuilder stringBuilder = new StringBuilder(1024);
+        //            PlatformInterfaceImports.GetWindowText(w, stringBuilder, 1024);
+        //            winfo.cbSize = Convert.ToUInt32(Marshal.SizeOf(winfo));
+        //            PlatformInterfaceImports.GetWindowInfo(w, ref winfo);
+        //            return PlatformInterfaceImports.IsWindowVisible(w) ? Process.GetProcessById((int)processId).ProcessName + " = " + stringBuilder.ToString() + " = " + string.Join("|", 
+        //                EnumExtensions.GetIndividualFlags((WindowStyles)winfo.dwStyle)) + " / " + string.Join("|", EnumExtensions.GetIndividualFlags((WindowStyles)winfo.dwExStyle)) : "";
+        //        }).ToList();
+        //    }
+        //    catch (Exception e)
+        //    {
+        //    }
 
-            foreach (var s in strs.Where(x => !x.EndsWith("= 0")))
-            {
-                Console.WriteLine(s);
-            }
-            Assert.IsTrue(windows.Count > 0);
-        }
+        //    foreach (var s in strs.Where(x => !string.IsNullOrEmpty(x)))
+        //    {
+        //        Console.WriteLine(s);
+        //    }
+        //    Assert.IsTrue(windows.Count > 0);
+        //}
 
         private static void StartTestApp()
         {

@@ -50,5 +50,15 @@ namespace WindowLayouterer.Platform
         {
             return PlatformInterfaceImports.EndDeferWindowPos(hWinPosInfo);
         }
+
+        public virtual string GetProcessName(uint processId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual bool IsWindowVisible(IntPtr hWnd)
+        {
+            return PlatformInterfaceImports.IsWindowVisible(hWnd);
+        }
     }
 }

@@ -172,14 +172,4 @@ namespace WindowLayouterer.Platform
         WS_EX_NOACTIVATE = 0x08000000
         //#endif /* WIN32WINNT >= 0x0500 */
     }
-
-    [Flags]
-    public enum KeyModifiers
-    {
-        None = 0,
-        Alt = 1,
-        Control = 2,
-        Shift = 4,
-        Windows = 8
-    }
 }

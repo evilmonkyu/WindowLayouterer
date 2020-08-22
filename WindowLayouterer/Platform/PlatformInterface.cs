@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Windows.Forms;
+using WindowLayouterer.Domain;
 
 namespace WindowLayouterer.Platform
 {
@@ -59,6 +61,21 @@ namespace WindowLayouterer.Platform
         public virtual bool IsWindowVisible(IntPtr hWnd)
         {
             return PlatformInterfaceImports.IsWindowVisible(hWnd);
+        }
+
+        public virtual bool RegisterHotKey(IntPtr hWnd, int id, KeyModifiers fsModifiers, Keys vk)
+        {
+            return PlatformInterfaceImports.RegisterHotKey(hWnd, id, fsModifiers, vk);
+        }
+
+        public virtual bool UnregisterHotKey(IntPtr hWnd, int id)
+        {
+            return PlatformInterfaceImports.UnregisterHotKey(hWnd, id);
+        }
+
+        public virtual IntPtr GetForegroundWindow()
+        {
+            return PlatformInterfaceImports.GetForegroundWindow();
         }
     }
 }

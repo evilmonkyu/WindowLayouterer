@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using WindowLayouterer.Domain;
 
 namespace WindowLayouterer.Platform
 {

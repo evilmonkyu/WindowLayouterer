@@ -10,5 +10,10 @@ namespace WindowLayouterer.Domain
         public string Name { get; set; }
         public string ProcessName { get; set; }
         public uint ProcessId { get; set; }
+        public int x { get; set; }
+        public int y { get; set; }
+        public int cx { get; set; }
+        public int cy { get; set; }
+
     }
 }

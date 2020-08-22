@@ -2,8 +2,12 @@
 using NSubstitute;
 using System;
 using System.Linq;
+using System.Net.WebSockets;
 using System.Text;
+using System.Windows.Forms;
+using WindowLayouterer.Domain;
 using WindowLayouterer.Platform;
+using WindowLayouterer.UserInterface;
 
 namespace WindowLayouterer.Tests.Platform
 {
@@ -11,13 +15,15 @@ namespace WindowLayouterer.Tests.Platform
     public class PlatformManagementTests
     {
         private PlatformInterface PlatformInterface;
+        private MainWindow MainWindow;
         private PlatformManagement PlatformManagement;
 
         [TestInitialize]
         public void Setup()
         {
             PlatformInterface = Substitute.For<PlatformInterface>();
-            PlatformManagement = new PlatformManagement(PlatformInterface);
+            MainWindow = Substitute.For<MainWindow>();
+            PlatformManagement = new PlatformManagement(PlatformInterface, MainWindow);
         }
 
         [TestMethod]
@@ -57,13 +63,78 @@ namespace WindowLayouterer.Tests.Platform
                 return 0u;
             });
             PlatformInterface.GetProcessName(0).ReturnsForAnyArgs(x => windows.Single(y => y.pid == (uint)x[0]).pname);            
-
             var result = PlatformManagement.GetAllVisibleWindows();
             Assert.AreEqual(1, result.Count);
             Assert.AreEqual(windows[0].ptr, result[0].Handle);
             Assert.AreEqual(windows[0].name, result[0].Name);
             Assert.AreEqual(windows[0].pname, result[0].ProcessName);
             Assert.AreEqual(windows[0].pid, result[0].ProcessId);
+        }
+
+        [TestMethod]
+        public void CanGetForegroundWindow()
+        {
+            var window = new { ptr = new IntPtr(1), name = "1", pname = "x", pid = 30u, style = WindowStyles.WS_SIZEBOX | WindowStyles.WS_MINIMIZE };
+            PlatformInterface.GetForegroundWindow().Returns(window.ptr);
+            PlatformInterface.GetWindowText(IntPtr.Zero, null, 0).ReturnsForAnyArgs(x =>
+            {
+                ((StringBuilder)x[1]).Append(window.name);
+                return window.name.Length;
+            });
+            var info = default(WINDOWINFO);
+            PlatformInterface.GetWindowInfo(IntPtr.Zero, ref info).ReturnsForAnyArgs(x =>
+            {
+                x[1] = new WINDOWINFO
+                {
+                    dwStyle = (uint)window.style
+                };
+                return true;
+            });
+            uint procId;
+            PlatformInterface.GetWindowThreadProcessId(IntPtr.Zero, out procId).ReturnsForAnyArgs(x =>
+            {
+                x[1] = window.pid;
+                return 0u;
+            });
+            PlatformInterface.GetProcessName(0).ReturnsForAnyArgs(x => window.pname);
+            var result = PlatformManagement.GetForegroundWindow();
+            Assert.AreEqual(window.ptr, result.Handle);
+            Assert.AreEqual(window.name, result.Name);
+            Assert.AreEqual(window.pname, result.ProcessName);
+            Assert.AreEqual(window.pid, result.ProcessId);
+        }
+
+        [TestMethod]
+        public void CanResizeWindows()
+        {
+            var windowArgs = new[]
+            {
+                new Window { Handle = new IntPtr(1), x = 100, y = 200, cx = 450, cy = 350 },
+                new Window { Handle = new IntPtr(2), x = 800, y = 900, cx = 250, cy = 150 }
+            };
+            var hWinPosInfo = new IntPtr();
+            PlatformInterface.BeginDeferWindowPos(2).Returns(hWinPosInfo);
+            PlatformInterface.DeferWindowPos(IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, 0, 0, 0, 0, 0).ReturnsForAnyArgs(hWinPosInfo);
+            PlatformInterface.EndDeferWindowPos(hWinPosInfo).Returns(true);
+            PlatformManagement.ResizeWindows(windowArgs.ToList());
+            PlatformInterface.Received().DeferWindowPos(Arg.Is(hWinPosInfo), Arg.Is(windowArgs[0].Handle), Arg.Any<IntPtr>(), windowArgs[0].x, windowArgs[0].y, 
+                windowArgs[0].cx, windowArgs[0].cy, (uint)(DeferWindowPosCommands.SWP_NOZORDER & DeferWindowPosCommands.SWP_NOACTIVATE));
+            PlatformInterface.Received().DeferWindowPos(Arg.Is(hWinPosInfo), Arg.Is(windowArgs[1].Handle), Arg.Any<IntPtr>(), windowArgs[1].x, windowArgs[1].y,
+                windowArgs[1].cx, windowArgs[1].cy, (uint)(DeferWindowPosCommands.SWP_NOZORDER & DeferWindowPosCommands.SWP_NOACTIVATE));
+            PlatformInterface.Received().EndDeferWindowPos(hWinPosInfo);
+        }
+
+        [TestMethod]
+        public void CanRegisterHotkey()
+        {
+            var ptr = new IntPtr(1);
+            MainWindow.Handle.Returns(ptr);
+            PlatformInterface.RegisterHotKey(IntPtr.Zero, 0, default, default).Returns(true);
+            PlatformManagement.RegisterHotKey(new Hotkey { Modifiers = KeyModifiers.Alt, Key = Keys.X });
+            PlatformManagement.RegisterHotKey(new Hotkey { Modifiers = KeyModifiers.Alt, Key = Keys.X });
+            PlatformManagement.RegisterHotKey(new Hotkey { Modifiers = KeyModifiers.Alt, Key = Keys.Y });
+            PlatformInterface.Received(2).RegisterHotKey(ptr, 0, KeyModifiers.Alt, Keys.X);
+            PlatformInterface.Received(1).RegisterHotKey(ptr, 1, KeyModifiers.Alt, Keys.Y);
         }
     }
 }

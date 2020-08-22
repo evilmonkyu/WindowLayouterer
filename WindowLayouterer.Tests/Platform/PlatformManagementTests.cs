@@ -35,20 +35,20 @@ namespace WindowLayouterer.Tests.Platform
                 new { ptr = new IntPtr(2), name = "2", pname = "y", pid = 31u, style = WindowStyles.WS_POPUPWINDOW | WindowStyles.WS_MINIMIZE },
                 new { ptr = new IntPtr(3), name = "", pname = "z", pid = 32u, style = WindowStyles.WS_SIZEBOX | WindowStyles.WS_MINIMIZE }
             };
-            PlatformInterface.EnumDesktopWindows(IntPtr.Zero, null, IntPtr.Zero).ReturnsForAnyArgs(x => 
+            PlatformInterface.EnumDesktopWindows(default, null, default).ReturnsForAnyArgs(x => 
             {
                 windows.Select(y => (x[1] as EnumDesktopWindowsDelegate)(y.ptr, ((IntPtr)x[2]).ToInt32())).ToList();
                 return true;
             });
-            PlatformInterface.IsWindowVisible(IntPtr.Zero).ReturnsForAnyArgs(x => { return (IntPtr)x[0] != windows[2].ptr; });
-            PlatformInterface.GetWindowText(IntPtr.Zero, null, 0).ReturnsForAnyArgs(x => 
+            PlatformInterface.IsWindowVisible(default).ReturnsForAnyArgs(x => { return (IntPtr)x[0] != windows[2].ptr; });
+            PlatformInterface.GetWindowText(default, null, 0).ReturnsForAnyArgs(x => 
             {
                 var w = windows.Single(y => y.ptr == (IntPtr)x[0]);
                 ((StringBuilder)x[1]).Append(w.name);
                 return w.name.Length;
             });
             var info = default (WINDOWINFO);
-            PlatformInterface.GetWindowInfo(IntPtr.Zero, ref info).ReturnsForAnyArgs(x =>
+            PlatformInterface.GetWindowInfo(default, ref info).ReturnsForAnyArgs(x =>
             {                
                 x[1] = new WINDOWINFO
                 {
@@ -57,7 +57,7 @@ namespace WindowLayouterer.Tests.Platform
                 return true;
             });
             uint procId;
-            PlatformInterface.GetWindowThreadProcessId(IntPtr.Zero, out procId).ReturnsForAnyArgs(x =>
+            PlatformInterface.GetWindowThreadProcessId(default, out procId).ReturnsForAnyArgs(x =>
             {
                 x[1] = windows.Single(y => y.ptr == (IntPtr)x[0]).pid;
                 return 0u;
@@ -76,13 +76,13 @@ namespace WindowLayouterer.Tests.Platform
         {
             var window = new { ptr = new IntPtr(1), name = "1", pname = "x", pid = 30u, style = WindowStyles.WS_SIZEBOX | WindowStyles.WS_MINIMIZE };
             PlatformInterface.GetForegroundWindow().Returns(window.ptr);
-            PlatformInterface.GetWindowText(IntPtr.Zero, null, 0).ReturnsForAnyArgs(x =>
+            PlatformInterface.GetWindowText(default, null, 0).ReturnsForAnyArgs(x =>
             {
                 ((StringBuilder)x[1]).Append(window.name);
                 return window.name.Length;
             });
             var info = default(WINDOWINFO);
-            PlatformInterface.GetWindowInfo(IntPtr.Zero, ref info).ReturnsForAnyArgs(x =>
+            PlatformInterface.GetWindowInfo(default, ref info).ReturnsForAnyArgs(x =>
             {
                 x[1] = new WINDOWINFO
                 {
@@ -91,7 +91,7 @@ namespace WindowLayouterer.Tests.Platform
                 return true;
             });
             uint procId;
-            PlatformInterface.GetWindowThreadProcessId(IntPtr.Zero, out procId).ReturnsForAnyArgs(x =>
+            PlatformInterface.GetWindowThreadProcessId(default, out procId).ReturnsForAnyArgs(x =>
             {
                 x[1] = window.pid;
                 return 0u;
@@ -114,7 +114,7 @@ namespace WindowLayouterer.Tests.Platform
             };
             var hWinPosInfo = new IntPtr();
             PlatformInterface.BeginDeferWindowPos(2).Returns(hWinPosInfo);
-            PlatformInterface.DeferWindowPos(IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, 0, 0, 0, 0, 0).ReturnsForAnyArgs(hWinPosInfo);
+            PlatformInterface.DeferWindowPos(default, default, default, 0, 0, 0, 0, 0).ReturnsForAnyArgs(hWinPosInfo);
             PlatformInterface.EndDeferWindowPos(hWinPosInfo).Returns(true);
             PlatformManagement.ResizeWindows(windowArgs.ToList());
             PlatformInterface.Received().DeferWindowPos(Arg.Is(hWinPosInfo), Arg.Is(windowArgs[0].Handle), Arg.Any<IntPtr>(), windowArgs[0].x, windowArgs[0].y, 
@@ -129,12 +129,28 @@ namespace WindowLayouterer.Tests.Platform
         {
             var ptr = new IntPtr(1);
             MainWindow.Handle.Returns(ptr);
-            PlatformInterface.RegisterHotKey(IntPtr.Zero, 0, default, default).Returns(true);
-            PlatformManagement.RegisterHotKey(new Hotkey { Modifiers = KeyModifiers.Alt, Key = Keys.X });
-            PlatformManagement.RegisterHotKey(new Hotkey { Modifiers = KeyModifiers.Alt, Key = Keys.X });
-            PlatformManagement.RegisterHotKey(new Hotkey { Modifiers = KeyModifiers.Alt, Key = Keys.Y });
+            PlatformInterface.RegisterHotKey(default, 0, default, default).ReturnsForAnyArgs(true);
+            PlatformManagement.RegisterHotKey(new HotKey { Modifiers = KeyModifiers.Alt, Key = Keys.X });
+            PlatformManagement.RegisterHotKey(new HotKey { Modifiers = KeyModifiers.Alt, Key = Keys.X });
+            PlatformManagement.RegisterHotKey(new HotKey { Modifiers = KeyModifiers.Alt, Key = Keys.Y });
             PlatformInterface.Received(2).RegisterHotKey(ptr, 0, KeyModifiers.Alt, Keys.X);
             PlatformInterface.Received(1).RegisterHotKey(ptr, 1, KeyModifiers.Alt, Keys.Y);
+        }
+
+        [TestMethod]
+        public void CanUnregisterHotkey()
+        {
+            var ptr = new IntPtr(1);
+            MainWindow.Handle.Returns(ptr);
+            PlatformInterface.RegisterHotKey(IntPtr.Zero, 0, default, default).Returns(true);
+            PlatformManagement.RegisterHotKey(new HotKey { Modifiers = KeyModifiers.Alt, Key = Keys.X });
+            PlatformManagement.RegisterHotKey(new HotKey { Modifiers = KeyModifiers.Alt, Key = Keys.Y });
+            PlatformManagement.UnregisterHotKey(new HotKey { Modifiers = KeyModifiers.Alt, Key = Keys.X });
+            PlatformManagement.UnregisterHotKey(new HotKey { Modifiers = KeyModifiers.Alt, Key = Keys.Y });
+            PlatformManagement.UnregisterHotKey(new HotKey { Modifiers = KeyModifiers.Alt, Key = Keys.Z });
+            PlatformInterface.Received().UnregisterHotKey(ptr, 0);
+            PlatformInterface.Received().UnregisterHotKey(ptr, 1);
+            PlatformInterface.ReceivedWithAnyArgs(2).UnregisterHotKey(default, 0);
         }
     }
 }

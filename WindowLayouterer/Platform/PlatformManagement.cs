@@ -12,7 +12,7 @@ namespace WindowLayouterer.Platform
         private PlatformInterface PlatformInterface;
         private MainWindow MainWindow;
 
-        private Dictionary<int, Hotkey> Hotkeys = new Dictionary<int, Hotkey>();
+        private Dictionary<HotKey, int> HotKeys = new Dictionary<HotKey, int>();
 
         public PlatformManagement(PlatformInterface platformInterface, MainWindow mainWindow)
         {
@@ -50,17 +50,27 @@ namespace WindowLayouterer.Platform
             PlatformInterface.EndDeferWindowPos(posInfo);
         }
 
-        public void RegisterHotKey(Hotkey hotkey)
+        public void RegisterHotKey(HotKey hotKey)
         {
             int id = 0;
-            var existing = Hotkeys.Values.SingleOrDefault(k => k.Key == hotkey.Key && k.Modifiers == hotkey.Modifiers);
+            var existing = HotKeys.Keys.SingleOrDefault(k => k.Key == hotKey.Key && k.Modifiers == hotKey.Modifiers);
             if (existing == null)
             {
-                while (Hotkeys.ContainsKey(id))
+                while (HotKeys.ContainsValue(id))
                     id++;
-                Hotkeys.Add(id, hotkey);
+                HotKeys.Add(hotKey, id);
             }
-            PlatformInterface.RegisterHotKey(MainWindow.Handle, id, hotkey.Modifiers, hotkey.Key);
+            PlatformInterface.RegisterHotKey(MainWindow.Handle, id, hotKey.Modifiers, hotKey.Key);
+        }
+
+        public void UnregisterHotKey(HotKey hotKey)
+        {
+            var existing = HotKeys.Keys.SingleOrDefault(k => k.Key == hotKey.Key && k.Modifiers == hotKey.Modifiers);
+            if (existing != null)
+            {
+                PlatformInterface.UnregisterHotKey(MainWindow.Handle, HotKeys[existing]);
+                HotKeys.Remove(existing);
+            }
         }
 
         private Window GetWindow(IntPtr handle)

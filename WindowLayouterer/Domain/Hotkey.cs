@@ -2,7 +2,7 @@
 
 namespace WindowLayouterer.Domain
 {
-    public class Hotkey
+    public class HotKey
     {
         public KeyModifiers Modifiers { get; set; }
         public Keys Key { get; set; }

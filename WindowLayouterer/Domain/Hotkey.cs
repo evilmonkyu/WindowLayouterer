@@ -6,5 +6,12 @@ namespace WindowLayouterer.Domain
     {
         public KeyModifiers Modifiers { get; set; }
         public Keys Key { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            return obj is HotKey key &&
+                   Modifiers == key.Modifiers &&
+                   Key == key.Key;
+        }
     }
 }

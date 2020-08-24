@@ -50,17 +50,17 @@ namespace WindowLayouterer.Platform
             PlatformInterface.EndDeferWindowPos(posInfo);
         }
 
-        public void RegisterHotKey(HotKey hotKey)
+        public void RegisterHotKey(HotKey hotkey)
         {
             int id = 0;
-            var existing = HotKeys.Keys.SingleOrDefault(k => k.Key == hotKey.Key && k.Modifiers == hotKey.Modifiers);
+            var existing = HotKeys.Keys.SingleOrDefault(k => k.Key == hotkey.Key && k.Modifiers == hotkey.Modifiers);
             if (existing == null)
             {
                 while (HotKeys.ContainsValue(id))
                     id++;
-                HotKeys.Add(hotKey, id);
+                HotKeys.Add(hotkey, id);
             }
-            PlatformInterface.RegisterHotKey(MainWindow.Handle, id, hotKey.Modifiers, hotKey.Key);
+            PlatformInterface.RegisterHotKey(MainWindow.Handle, id, hotkey.Modifiers, hotkey.Key);
         }
 
         public void UnregisterHotKey(HotKey hotKey)
@@ -78,7 +78,7 @@ namespace WindowLayouterer.Platform
             var window = new Window { Handle = handle };
             var sb = new StringBuilder(1024);
             PlatformInterface.GetWindowText(handle, sb, 1024);
-            window.Name = sb.ToString();
+            window.Title = sb.ToString();
             uint pid;
             PlatformInterface.GetWindowThreadProcessId(handle, out pid);
             window.ProcessId = pid;

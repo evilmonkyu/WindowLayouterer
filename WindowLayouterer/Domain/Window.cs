@@ -7,7 +7,7 @@ namespace WindowLayouterer.Domain
     public class Window
     {
         public IntPtr Handle { get; set; }
-        public string Name { get; set; }
+        public string Title { get; set; }
         public string ProcessName { get; set; }
         public uint ProcessId { get; set; }
         public int x { get; set; }

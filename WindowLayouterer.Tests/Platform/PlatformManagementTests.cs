@@ -66,7 +66,7 @@ namespace WindowLayouterer.Tests.Platform
             var result = PlatformManagement.GetAllVisibleWindows();
             Assert.AreEqual(1, result.Count);
             Assert.AreEqual(windows[0].ptr, result[0].Handle);
-            Assert.AreEqual(windows[0].name, result[0].Name);
+            Assert.AreEqual(windows[0].name, result[0].Title);
             Assert.AreEqual(windows[0].pname, result[0].ProcessName);
             Assert.AreEqual(windows[0].pid, result[0].ProcessId);
         }
@@ -99,7 +99,7 @@ namespace WindowLayouterer.Tests.Platform
             PlatformInterface.GetProcessName(0).ReturnsForAnyArgs(x => window.pname);
             var result = PlatformManagement.GetForegroundWindow();
             Assert.AreEqual(window.ptr, result.Handle);
-            Assert.AreEqual(window.name, result.Name);
+            Assert.AreEqual(window.name, result.Title);
             Assert.AreEqual(window.pname, result.ProcessName);
             Assert.AreEqual(window.pid, result.ProcessId);
         }

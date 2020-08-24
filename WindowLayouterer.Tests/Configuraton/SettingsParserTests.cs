@@ -1,6 +1,8 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NSubstitute;
 using System;
 using System.Collections.Generic;
+using System.Windows.Forms;
 using WindowLayouterer.Configuration;
 using WindowLayouterer.Domain;
 
@@ -9,12 +11,15 @@ namespace WindowLayouterer.Tests.Configuraton
     [TestClass]
     public class SettingsParserTests
     {
+        private KeyParser KeyParser;
         private SettingsParser SettingsParser;
 
         [TestInitialize]
         public void Setup()
         {
-            SettingsParser = new SettingsParser();
+            KeyParser = Substitute.For<KeyParser>();
+            KeyParser.Parse(Arg.Any<string>()).Returns(new HotKey { Key = Keys.A });
+            SettingsParser = new SettingsParser(KeyParser);
         }
 
         [TestMethod]
@@ -134,14 +139,14 @@ namespace WindowLayouterer.Tests.Configuraton
                 new LayoutSetting
                 {
                     Name = "layout1",
-                    HotKey = new HotKey(),
+                    HotKey = new HotKey { Key = Keys.A },
                     IsDefault = true,
                     ScreenAreas = new List<ScreenAreaSetting>
                     {
                         new ScreenAreaSetting
                         {
                             Name = "area1",
-                            HotKey = new HotKey(),
+                            HotKey = new HotKey { Key = Keys.A },
                             Windows = new List<WindowSetting>
                             {
                                 new WindowSetting
@@ -164,7 +169,7 @@ namespace WindowLayouterer.Tests.Configuraton
                         new ScreenAreaSetting
                         {
                             Name = "area2",
-                            HotKey =  new HotKey(),
+                            HotKey =  new HotKey { Key = Keys.A },
                             Windows = new List<WindowSetting>
                             {
                                 new WindowSetting
@@ -187,7 +192,7 @@ namespace WindowLayouterer.Tests.Configuraton
                         new ScreenAreaSetting
                         {
                             Name = "area3",
-                            HotKey =  new HotKey(),
+                            HotKey =  new HotKey { Key = Keys.A },
                             Windows = new List<WindowSetting>
                             {
                                 new WindowSetting
@@ -207,14 +212,14 @@ namespace WindowLayouterer.Tests.Configuraton
                 new LayoutSetting
                 {
                     Name = "layout2",
-                    HotKey = new HotKey(),
+                    HotKey = new HotKey { Key = Keys.A },
                     IsDefault = false,
                     ScreenAreas = new List<ScreenAreaSetting>
                     {
                         new ScreenAreaSetting
                         {
                             Name = "area1",
-                            HotKey = new HotKey(),
+                            HotKey = new HotKey { Key = Keys.A },
                             Windows = new List<WindowSetting>
                             {
                                 new WindowSetting
@@ -237,7 +242,7 @@ namespace WindowLayouterer.Tests.Configuraton
                         new ScreenAreaSetting
                         {
                             Name = "area2",
-                            HotKey =  new HotKey(),
+                            HotKey =  new HotKey { Key = Keys.A },
                             Windows = new List<WindowSetting>
                             {
                                 new WindowSetting

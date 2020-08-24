@@ -11,7 +11,14 @@ namespace WindowLayouterer.Configuration
 {
     public class SettingsParser
     {
-        public Settings Parse(string settingsText)
+        private KeyParser KeyParser;
+
+        public SettingsParser(KeyParser keyParser)
+        {
+            this.KeyParser = keyParser;
+        }
+
+        public virtual Settings Parse(string settingsText)
         {
             var jobj = JsonConvert.DeserializeObject(settingsText) as JObject;
             var windows = jobj["Windows"].ToList();
@@ -67,7 +74,8 @@ namespace WindowLayouterer.Configuration
 
         private void ReplaceKey(JToken sa)
         {
-            sa["HotKey"].Replace(new JObject(new JProperty("Key", 0), new JProperty("Modifiers", 0)));
+            var key = KeyParser.Parse(sa["HotKey"].Value<string>());
+            sa["HotKey"] = JToken.FromObject(key);
         }
     }
 }
